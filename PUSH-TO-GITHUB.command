@@ -13,7 +13,7 @@ else
 fi
 
 echo ""
-echo "Pushing to github.com/agamkram/death-clock-app ..."
+echo "Pushing to github.com/agamkram/lifespan-app ..."
 git push -u origin main
 
 if [ $? -eq 0 ]; then

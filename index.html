@@ -9,19 +9,19 @@
   <meta name="theme-color" content="#0f1419" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Death Clock" />
+  <meta name="apple-mobile-web-app-title" content="Lifespan" />
   <meta
     name="description"
     content="Estimate your death age from age, fitness, BMI, and health habits. Evidence-based, transparent formula."
   />
-  <title>Death Clock</title>
+  <title>Lifespan</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" type="image/png" href="apple-touch-icon.png" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap"
     rel="stylesheet"
   />
   <style>
@@ -40,11 +40,11 @@
       --border: rgba(255, 255, 255, 0.08);
       --app-gap: clamp(0.35rem, 1.2vmin, 0.55rem);
       --ctrl-gap: 0.28rem;
-      --text-title: clamp(1rem, 2.8vmin, 1.2rem);
+      --text-title: clamp(1.3rem, 4vmin, 1.7rem);
       --text-label: clamp(0.58rem, 1.5vmin, 0.68rem);
       --text-value: clamp(0.95rem, 2.4vmin, 1.15rem);
       --text-ui: clamp(0.62rem, 1.6vmin, 0.72rem);
-      --text-formula: clamp(0.5rem, 1.2vmin, 0.58rem);
+      --text-formula: clamp(0.65rem, 1.75vmin, 0.78rem);
     }
 
     * {
@@ -64,7 +64,7 @@
     body {
       height: 100%;
       overflow: hidden;
-      font-family: "DM Sans", system-ui, sans-serif;
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
     }
@@ -109,31 +109,23 @@
       transform: none !important;
       width: 100% !important;
       max-width: 56rem;
-      height: 100%;
-      max-height: 100dvh;
+      height: auto;
+      max-height: none;
       will-change: auto;
-      overflow: hidden;
+      overflow: visible;
     }
 
-    .app[data-layout="wide"] {
-      grid-template-columns: 1fr minmax(11rem, 13.5rem);
-      grid-template-rows: auto 1fr auto;
-      grid-template-areas:
-        "header result"
-        "inputs result"
-        "formula formula";
-      width: min(56rem, 100%);
-      max-height: 100dvh;
-    }
-
+    .app[data-layout="wide"],
     .app[data-layout="phone"] {
       grid-template-columns: 1fr;
+      grid-template-rows: auto auto auto auto;
       grid-template-areas:
         "header"
-        "result"
         "inputs"
+        "result"
         "formula";
-      width: 100%;
+      width: min(26rem, 100%);
+      max-height: none;
     }
 
     header {
@@ -147,25 +139,53 @@
       letter-spacing: -0.03em;
     }
 
-    header p {
+    header .subheader {
       font-size: var(--text-ui);
+      font-weight: 500;
       color: var(--muted);
-      margin-top: 0.1rem;
+      margin-top: 0.12rem;
+      letter-spacing: 0.01em;
+      line-height: 1.25;
+    }
+
+    .inputs-panel {
+      grid-area: inputs;
+      display: flex;
+      flex-direction: column;
+      gap: var(--app-gap);
+      width: 100%;
+      flex-shrink: 0;
     }
 
     .result-panel {
       grid-area: result;
       background: linear-gradient(160deg, rgba(61, 156, 245, 0.14), rgba(192, 132, 252, 0.08));
       border: 1px solid rgba(61, 156, 245, 0.28);
-      border-radius: 14px;
-      padding: 0.55rem 0.65rem;
+      border-radius: 10px;
+      padding: 0.5rem 0.55rem;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
       text-align: center;
-      gap: 0.2rem;
-      min-height: 0;
+      gap: 0.35rem;
+      width: 100%;
+      flex-shrink: 0;
+      margin-top: 0.15rem;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.3rem;
+      width: 100%;
+    }
+
+    .result-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.08rem;
+      min-width: 0;
     }
 
     .result-label {
@@ -173,45 +193,27 @@
       font-weight: 600;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
     }
 
-    .result-age {
-      font-size: clamp(2rem, 8vmin, 3rem);
+    .result-value {
+      font-size: clamp(1.05rem, 3.6vmin, 1.45rem);
       font-weight: 700;
       line-height: 1;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .result-value--death-age {
       color: var(--text);
-      font-variant-numeric: tabular-nums;
     }
 
-    .result-year {
-      font-size: clamp(1.1rem, 3.5vmin, 1.45rem);
-      font-weight: 600;
+    .result-value--death-year {
       color: var(--accent);
-      font-variant-numeric: tabular-nums;
     }
 
-    .result-rally {
-      margin-top: 0.25rem;
-      font-size: clamp(0.72rem, 2vmin, 0.88rem);
-      font-weight: 600;
-      color: var(--warning);
-      line-height: 1.25;
-      max-width: 14rem;
-    }
-
-    .inputs-panel {
-      grid-area: inputs;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--app-gap);
-      min-height: 0;
-      align-content: start;
-    }
-
-    .app[data-layout="phone"] .inputs-panel {
-      grid-template-columns: 1fr;
+    .result-value--remaining {
+      color: var(--text);
     }
 
     .control {
@@ -226,10 +228,88 @@
     }
 
     .control--vo2 {
-      grid-column: 1 / -1;
       background: linear-gradient(180deg, rgba(61, 156, 245, 0.1), var(--surface));
       border-color: rgba(61, 156, 245, 0.35);
       box-shadow: 0 0 0 1px rgba(61, 156, 245, 0.08) inset;
+    }
+
+    .age-sex-split {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 0.4rem;
+      align-items: end;
+    }
+
+    .age-sex-age,
+    .age-sex-sex {
+      min-width: 0;
+    }
+
+    .bmi-weight-split {
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 0.4rem;
+      align-items: end;
+    }
+
+    .bmi-weight-slider,
+    .bmi-readout {
+      min-width: 0;
+    }
+
+    .bmi-readout {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 0.12rem;
+      text-align: center;
+    }
+
+    .bmi-readout-value {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.18rem;
+      line-height: 1;
+    }
+
+    .bmi-readout-label {
+      font-size: var(--text-label);
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .bmi-readout-number {
+      font-size: clamp(0.9rem, 2.2vmin, 1.05rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bmi-readout .badge {
+      font-size: clamp(0.48rem, 1.1vmin, 0.56rem);
+      padding: 0.1rem 0.22rem;
+      max-width: 100%;
+      white-space: normal;
+      line-height: 1.15;
+    }
+
+    .control--age-sex .control-value {
+      font-size: clamp(1.15rem, 3.2vmin, 1.4rem);
+      color: var(--accent);
+    }
+
+    .segmented--sex {
+      flex-direction: column;
+    }
+
+    .segmented--sex .seg-btn {
+      flex: 1;
+      min-height: 1.55rem;
+      font-size: clamp(0.58rem, 1.4vmin, 0.68rem);
+      padding: 0.28rem 0.12rem;
     }
 
     .control-head {
@@ -255,11 +335,6 @@
       color: var(--text);
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.02em;
-    }
-
-    .control--age .control-value {
-      font-size: clamp(1.15rem, 3.2vmin, 1.4rem);
-      color: var(--accent);
     }
 
     .badge {
@@ -289,16 +364,22 @@
     .badge--obese2 { background: rgba(248, 113, 113, 0.18); color: #fca5a5; border-color: rgba(248, 113, 113, 0.35); }
     .badge--obese3 { background: rgba(239, 68, 68, 0.22); color: #fecaca; border-color: rgba(245, 158, 11, 0.45); }
 
-    input[type="range"] {
+    .slider-row {
       width: 100%;
+    }
+
+    input[type="range"] {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      margin: 0;
       accent-color: var(--accent);
       cursor: pointer;
-      height: 1.1rem;
+      height: 1.15rem;
     }
 
     .control--vo2 input[type="range"] {
       accent-color: #60a5fa;
-      height: 1.25rem;
     }
 
     @media (pointer: coarse) {
@@ -313,12 +394,6 @@
       background: var(--surface-2);
       border-radius: 8px;
       padding: 2px;
-    }
-
-    .segmented--sex .seg-btn {
-      flex: 1;
-      min-height: 2.1rem;
-      font-size: clamp(0.72rem, 1.8vmin, 0.82rem);
     }
 
     .seg-btn {
@@ -347,14 +422,25 @@
       font-weight: 700;
     }
 
-    .formula {
+    .formula-wrap {
       grid-area: formula;
+      flex-shrink: 0;
+      width: 100%;
+      overflow: hidden;
+      text-align: center;
+      margin-top: -0.2rem;
+      padding: 0.05rem 0 0.05rem;
+    }
+
+    .formula {
+      display: inline-block;
+      max-width: 100%;
       font-size: var(--text-formula);
       color: var(--muted);
       line-height: 1.35;
-      text-align: center;
-      padding: 0.15rem 0.25rem 0;
-      opacity: 0.9;
+      padding: 0 0.2rem;
+      opacity: 0.92;
+      white-space: nowrap;
     }
 
     @media (max-width: 767px) {
@@ -370,20 +456,6 @@
       .app {
         transform-origin: top center;
       }
-
-      .result-panel {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: baseline;
-        gap: 0.15rem 0.55rem;
-        padding: 0.42rem 0.5rem;
-      }
-
-      .result-rally {
-        flex-basis: 100%;
-        margin-top: 0.1rem;
-      }
     }
 
     @media (min-width: 768px) and (max-height: 700px) {
@@ -394,10 +466,6 @@
       .control {
         padding: 0.3rem 0.4rem 0.34rem;
       }
-
-      .result-age {
-        font-size: 2.2rem;
-      }
     }
   </style>
 </head>
@@ -405,34 +473,59 @@
   <div class="fit-stage" id="fit-stage">
     <div class="app" id="app">
       <header>
-        <h1>Death Clock</h1>
-        <p>Evidence-based estimate · not medical advice</p>
+        <h1>Lifespan</h1>
+        <p class="subheader">U.S. period life expectancy · NCHS 2023</p>
       </header>
 
-      <section class="result-panel" aria-live="polite">
-        <span class="result-label">Death age</span>
-        <span class="result-age" id="death-age">—</span>
-        <span class="result-label">Death year</span>
-        <span class="result-year" id="death-year">—</span>
-        <p class="result-rally">Get cracking, there's no time to waste!</p>
-      </section>
-
       <div class="inputs-panel">
-        <div class="control control--age">
-          <div class="control-head">
-            <span class="control-label">Age</span>
-            <span class="control-value" id="age-value">42</span>
+        <div class="control control--age-sex">
+          <div class="age-sex-split">
+            <div class="age-sex-age">
+              <div class="control-head">
+                <span class="control-label">Age</span>
+                <span class="control-value" id="age-value">42</span>
+              </div>
+              <div class="slider-row">
+                <input type="range" id="age-slider" min="18" max="95" value="42" step="1" aria-label="Age" />
+              </div>
+            </div>
+            <div class="age-sex-sex">
+              <div class="segmented segmented--sex" role="group" aria-label="Sex">
+                <button type="button" class="seg-btn" data-sex="male" aria-pressed="true">Male</button>
+                <button type="button" class="seg-btn" data-sex="female" aria-pressed="false">Female</button>
+              </div>
+            </div>
           </div>
-          <input type="range" id="age-slider" min="18" max="95" value="42" step="1" aria-label="Age" />
         </div>
 
-        <div class="control control--sex">
+        <div class="control control--height">
           <div class="control-head">
-            <span class="control-label">Sex</span>
+            <span class="control-label">Height</span>
+            <span class="control-value" id="height-value">5′9″</span>
           </div>
-          <div class="segmented segmented--sex" role="group" aria-label="Sex">
-            <button type="button" class="seg-btn" data-sex="male" aria-pressed="true">Male</button>
-            <button type="button" class="seg-btn" data-sex="female" aria-pressed="false">Female</button>
+          <div class="slider-row">
+            <input type="range" id="height-slider" min="48" max="84" value="69" step="1" aria-label="Height" />
+          </div>
+        </div>
+
+        <div class="control control--bmi">
+          <div class="bmi-weight-split">
+            <div class="bmi-weight-slider">
+              <div class="control-head">
+                <span class="control-label">Weight</span>
+                <span class="control-value" id="weight-value">168 lb</span>
+              </div>
+              <div class="slider-row">
+                <input type="range" id="weight-slider" min="50" max="400" value="168" step="1" aria-label="Weight in pounds" />
+              </div>
+            </div>
+            <div class="bmi-readout" aria-live="polite">
+              <span class="bmi-readout-value">
+                <span class="bmi-readout-label">BMI</span>
+                <span class="bmi-readout-number" id="bmi-value">24.8</span>
+              </span>
+              <span class="badge badge--normal" id="bmi-badge">Normal</span>
+            </div>
           </div>
         </div>
 
@@ -442,16 +535,9 @@
             <span class="control-value" id="vo2-value">38</span>
             <span class="badge badge--average" id="vo2-badge">Average</span>
           </div>
-          <input type="range" id="vo2-slider" min="18" max="70" value="38" step="1" aria-label="VO2 max" />
-        </div>
-
-        <div class="control control--bmi">
-          <div class="control-head">
-            <span class="control-label">BMI</span>
-            <span class="control-value" id="bmi-value">25.0</span>
-            <span class="badge badge--normal" id="bmi-badge">Normal</span>
+          <div class="slider-row">
+            <input type="range" id="vo2-slider" min="18" max="70" value="38" step="1" aria-label="VO2 max" />
           </div>
-          <input type="range" id="bmi-slider" min="150" max="450" value="250" step="1" aria-label="BMI" />
         </div>
 
         <div class="control">
@@ -470,8 +556,8 @@
             <span class="control-label">Blood pressure</span>
           </div>
           <div class="segmented" role="group" aria-label="Blood pressure" data-field="bp">
-            <button type="button" class="seg-btn" data-value="optimal" aria-pressed="true">Optimal</button>
-            <button type="button" class="seg-btn" data-value="normal" aria-pressed="false">Normal</button>
+            <button type="button" class="seg-btn" data-value="optimal" aria-pressed="false">Optimal</button>
+            <button type="button" class="seg-btn" data-value="normal" aria-pressed="true">Normal</button>
             <button type="button" class="seg-btn" data-value="elevated" aria-pressed="false">Elevated</button>
             <button type="button" class="seg-btn" data-value="high" aria-pressed="false">High</button>
           </div>
@@ -501,7 +587,26 @@
         </div>
       </div>
 
-      <p class="formula" id="formula" aria-live="polite"></p>
+      <section class="result-panel" aria-live="polite">
+        <div class="result-grid">
+          <div class="result-stat">
+            <span class="result-label">Remaining</span>
+            <span class="result-value result-value--remaining" id="remaining-years">—</span>
+          </div>
+          <div class="result-stat">
+            <span class="result-label">Lifespan</span>
+            <span class="result-value result-value--death-age" id="death-age">—</span>
+          </div>
+          <div class="result-stat">
+            <span class="result-label">Last year</span>
+            <span class="result-value result-value--death-year" id="death-year">—</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="formula-wrap">
+        <p class="formula" id="formula" aria-live="polite"></p>
+      </div>
     </div>
   </div>
 
@@ -512,25 +617,31 @@
       const state = {
         age: 42,
         sex: "male",
+        heightIn: 69,
+        weightLbs: 168,
         vo2: 38,
-        bmi: 25,
         smoking: "never",
-        bp: "optimal",
+        bp: "normal",
         diabetes: "none",
         diet: "average",
       };
 
       const ageSlider = document.getElementById("age-slider");
+      const heightSlider = document.getElementById("height-slider");
+      const weightSlider = document.getElementById("weight-slider");
       const vo2Slider = document.getElementById("vo2-slider");
-      const bmiSlider = document.getElementById("bmi-slider");
       const ageValue = document.getElementById("age-value");
+      const heightValue = document.getElementById("height-value");
+      const weightValue = document.getElementById("weight-value");
       const vo2Value = document.getElementById("vo2-value");
       const bmiValue = document.getElementById("bmi-value");
       const vo2Badge = document.getElementById("vo2-badge");
       const bmiBadge = document.getElementById("bmi-badge");
+      const remainingYearsEl = document.getElementById("remaining-years");
       const deathAgeEl = document.getElementById("death-age");
       const deathYearEl = document.getElementById("death-year");
       const formulaEl = document.getElementById("formula");
+      const formulaWrap = document.querySelector(".formula-wrap");
 
       const VO2_BADGE_CLASS = {
         Poor: "badge--poor",
@@ -549,6 +660,12 @@
         obese2: "badge--obese2",
         obese3: "badge--obese3",
       };
+
+      function formatHeight(inches) {
+        const ft = Math.floor(inches / 12);
+        const inch = inches % 12;
+        return `${ft}′${inch}″`;
+      }
 
       function setBadge(el, label, classKey, classMap) {
         el.textContent = label;
@@ -584,22 +701,43 @@
         });
       }
 
+      function fitFormulaLine() {
+        if (!formulaWrap || !formulaEl) return;
+        formulaEl.style.fontSize = "";
+        let size = parseFloat(getComputedStyle(formulaEl).fontSize);
+        const minSize = 6;
+        while (formulaEl.scrollWidth > formulaWrap.clientWidth && size > minSize) {
+          size -= 0.25;
+          formulaEl.style.fontSize = `${size}px`;
+        }
+      }
+
       function update() {
         const result = DeathEstimator.estimate(state);
 
         ageValue.textContent = result.age;
+        heightValue.textContent = formatHeight(result.heightIn);
+        weightValue.textContent = `${result.weightLbs} lb`;
         vo2Value.textContent = result.vo2;
         bmiValue.textContent = result.bmi.toFixed(1);
         setBadge(vo2Badge, result.vo2Category, result.vo2Category, VO2_BADGE_CLASS);
         setBadge(bmiBadge, result.bmiCategory.label, result.bmiCategory.key, BMI_BADGE_CLASS);
 
-        deathAgeEl.textContent = result.deathAge;
+        remainingYearsEl.textContent = `${result.remainingYears.toFixed(1)} yrs`;
+        deathAgeEl.textContent = `${result.deathAge} yrs`;
         deathYearEl.textContent = result.deathYear;
         formulaEl.textContent = result.formula;
+        fitFormulaLine();
+        fit.scheduleFitToScreen(true);
       }
 
       ageSlider.addEventListener("input", () => {
         state.age = Number(ageSlider.value);
+        update();
+      });
+
+      heightSlider.addEventListener("input", () => {
+        state.heightIn = Number(heightSlider.value);
         update();
       });
 
@@ -608,31 +746,33 @@
         update();
       });
 
-      bmiSlider.addEventListener("input", () => {
-        state.bmi = Number(bmiSlider.value) / 10;
+      weightSlider.addEventListener("input", () => {
+        state.weightLbs = Number(weightSlider.value);
         update();
       });
-
-      bindSegmentedGroups();
-      update();
 
       const fit = FitToScreen.create({
         stage: "fit-stage",
         app: "app",
         phoneMaxWidth: 767,
-        wideAppWidth: 896,
+        wideAppWidth: 416,
         getLayoutName(availW) {
           return availW <= 767 ? "phone" : "wide";
         },
-        useScaleForLayout(layout) {
-          return layout === "phone";
+        useScaleForLayout() {
+          return true;
         },
-        getCapScaleAtOne(layout) {
-          return layout === "phone";
+        getCapScaleAtOne() {
+          return true;
+        },
+        onFit() {
+          fitFormulaLine();
         },
       });
 
+      bindSegmentedGroups();
       fit.bindViewportListeners();
+      update();
       fit.bootLayout();
     })();
   </script>

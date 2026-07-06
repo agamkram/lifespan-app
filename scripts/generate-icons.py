@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Generate Death Clock home-screen icons."""
+"""Generate Lifespan home-screen icons."""
 
 from __future__ import annotations
 
-import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -12,50 +11,37 @@ ROOT = Path(__file__).resolve().parents[1]
 
 BG = (15, 20, 25)
 ACCENT = (61, 156, 245)
-WARNING = (245, 158, 11)
-SURFACE = (36, 48, 68)
+MUTED = (36, 48, 68)
+TEXT = (232, 237, 244)
 
 
-def draw_hourglass(draw: ImageDraw.ImageDraw, center: tuple[int, int], size: int) -> None:
-    cx, cy = center
-    w = size
-    h = int(size * 1.35)
-    left = cx - w // 2
-    right = cx + w // 2
-    top = cy - h // 2
-    bottom = cy + h // 2
-    mid = cy
-
-    frame_w = max(3, size // 14)
-    draw.rounded_rectangle(
-        (left, top, right, bottom),
-        radius=max(6, size // 10),
-        outline=ACCENT,
-        width=frame_w,
-    )
-
-    sand_top = [
-        (left + frame_w * 2, top + frame_w * 2),
-        (right - frame_w * 2, top + frame_w * 2),
-        (cx, mid - size * 0.08),
+def survival_curve_points(size: int) -> list[tuple[float, float]]:
+    margin = size * 0.18
+    width = size - margin * 2
+    height = size * 0.42
+    base_y = size * 0.62
+    steps = [
+        (0.0, 1.0),
+        (0.22, 0.96),
+        (0.42, 0.9),
+        (0.58, 0.78),
+        (0.72, 0.58),
+        (0.84, 0.34),
+        (1.0, 0.08),
     ]
-    sand_bottom = [
-        (cx, mid + size * 0.08),
-        (left + frame_w * 3, bottom - frame_w * 2),
-        (right - frame_w * 3, bottom - frame_w * 2),
+    return [
+        (margin + width * x, base_y - height * y)
+        for x, y in steps
     ]
-    draw.polygon(sand_top, fill=WARNING)
-    draw.polygon(sand_bottom, fill=WARNING)
 
-    neck = max(3, size // 18)
-    draw.rectangle(
-        (cx - neck, mid - neck, cx + neck, mid + neck),
-        fill=SURFACE,
-    )
-    draw.ellipse(
-        (cx - neck * 1.4, mid - neck * 1.4, cx + neck * 1.4, mid + neck * 1.4),
-        fill=WARNING,
-    )
+
+def draw_grid(draw: ImageDraw.ImageDraw, size: int) -> None:
+    step = size // 8
+    for i in range(1, 8):
+        x = i * step
+        y = i * step
+        draw.line((x, size * 0.18, x, size * 0.82), fill=MUTED + (70,), width=1)
+        draw.line((size * 0.18, y, size * 0.82, y), fill=MUTED + (70,), width=1)
 
 
 def build_icon(size: int) -> Image.Image:
@@ -63,13 +49,49 @@ def build_icon(size: int) -> Image.Image:
     glow = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     glow_draw = ImageDraw.Draw(glow)
     glow_draw.ellipse(
-        (size * 0.18, size * 0.18, size * 0.82, size * 0.82),
-        fill=(245, 158, 11, 24),
+        (size * 0.12, size * 0.22, size * 0.88, size * 0.88),
+        fill=(61, 156, 245, 28),
     )
-    canvas = Image.alpha_composite(canvas, glow.filter(ImageFilter.GaussianBlur(radius=size // 40)))
+    canvas = Image.alpha_composite(canvas, glow.filter(ImageFilter.GaussianBlur(radius=size // 28)))
 
     draw = ImageDraw.Draw(canvas)
-    draw_hourglass(draw, (size // 2, size // 2), int(size * 0.34))
+    draw_grid(draw, size)
+
+    points = survival_curve_points(size)
+    line_w = max(3, size // 42)
+    draw.line(points, fill=ACCENT, width=line_w, joint="curve")
+
+    for idx, point in enumerate(points[::2]):
+        radius = max(2, size // 52) if idx else max(3, size // 38)
+        fill = TEXT if idx == 0 else ACCENT
+        x, y = point
+        draw.ellipse(
+            (x - radius, y - radius, x + radius, y + radius),
+            fill=fill,
+        )
+
+    end_x, end_y = points[-1]
+    ring = max(4, size // 24)
+    draw.ellipse(
+        (end_x - ring, end_y - ring, end_x + ring, end_y + ring),
+        outline=ACCENT,
+        width=max(2, size // 64),
+    )
+
+    bar_left = size * 0.2
+    bar_right = size * 0.8
+    bar_y = size * 0.8
+    draw.rounded_rectangle(
+        (bar_left, bar_y, bar_right, bar_y + size * 0.05),
+        radius=size // 64,
+        fill=MUTED,
+    )
+    draw.rounded_rectangle(
+        (bar_left, bar_y, bar_left + (bar_right - bar_left) * 0.62, bar_y + size * 0.05),
+        radius=size // 64,
+        fill=ACCENT,
+    )
+
     return canvas.convert("RGB")
 
 

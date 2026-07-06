@@ -1,7 +1,7 @@
 {
-  "name": "Death Clock",
-  "short_name": "Death Clock",
-  "description": "Estimate your death age from health and fitness inputs",
+  "name": "Lifespan",
+  "short_name": "Lifespan",
+  "description": "Estimate your lifespan and last year from health and fitness inputs",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0f1419",
