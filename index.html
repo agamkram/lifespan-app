@@ -458,25 +458,6 @@
       }
     }
 
-    /* iPad: keep scale centered inside safe padding (no top-origin phone rules) */
-    @media (min-width: 768px) and (max-width: 1366px) and (hover: none),
-      (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
-      .fit-stage {
-        align-items: center;
-        justify-content: center;
-        padding:
-          max(0.3rem, env(safe-area-inset-top, 0px))
-          max(0.4rem, env(safe-area-inset-right, 0px))
-          max(0.3rem, env(safe-area-inset-bottom, 0px))
-          max(0.4rem, env(safe-area-inset-left, 0px));
-      }
-
-      .app,
-      .app[data-layout="tablet"] {
-        transform-origin: center center;
-      }
-    }
-
     @media (min-width: 768px) and (max-height: 700px) {
       :root {
         --app-gap: 0.3rem;
@@ -770,38 +751,19 @@
         update();
       });
 
-      const ARTBOARD_W = 416; // same design for phone-wide & iPad (proportions)
-
-      function isDesktopPointer() {
-        return (
-          navigator.maxTouchPoints === 0 &&
-          window.matchMedia("(hover: hover) and (pointer: fine)").matches
-        );
-      }
-
       const fit = FitToScreen.create({
         stage: "fit-stage",
         app: "app",
         phoneMaxWidth: 767,
-        wideAppWidth: ARTBOARD_W,
+        wideAppWidth: 416,
+        getLayoutName(availW) {
+          return availW <= 767 ? "phone" : "wide";
+        },
         useScaleForLayout() {
           return true;
         },
-        // Phone path unchanged (width ≤767). iPad → tablet (scale may exceed 1).
-        // Real Mac/PC → wide (scale capped at 1).
-        getLayoutName(availW) {
-          if (isDesktopPointer()) return "wide";
-          if (availW <= 767) return "phone";
-          return "tablet";
-        },
-        getAppLayoutWidth(availW, layout) {
-          // Phone: full device width (original behavior).
-          if (layout === "phone") return availW;
-          // iPad + desktop: fixed artboard; iPad then scales up proportionally.
-          return ARTBOARD_W;
-        },
-        getCapScaleAtOne(layout) {
-          return layout !== "tablet";
+        getCapScaleAtOne() {
+          return true;
         },
         onFit() {
           fitFormulaLine();
