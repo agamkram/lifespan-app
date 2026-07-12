@@ -751,19 +751,38 @@
         update();
       });
 
+      const ARTBOARD_W = 416; // same design for phone-wide & iPad (proportions)
+
+      function isDesktopPointer() {
+        return (
+          navigator.maxTouchPoints === 0 &&
+          window.matchMedia("(hover: hover) and (pointer: fine)").matches
+        );
+      }
+
       const fit = FitToScreen.create({
         stage: "fit-stage",
         app: "app",
         phoneMaxWidth: 767,
-        wideAppWidth: 416,
-        getLayoutName(availW) {
-          return availW <= 767 ? "phone" : "wide";
-        },
+        wideAppWidth: ARTBOARD_W,
         useScaleForLayout() {
           return true;
         },
-        getCapScaleAtOne() {
-          return true;
+        // Phone path unchanged (width ≤767). iPad → tablet (scale may exceed 1).
+        // Real Mac/PC → wide (scale capped at 1).
+        getLayoutName(availW) {
+          if (isDesktopPointer()) return "wide";
+          if (availW <= 767) return "phone";
+          return "tablet";
+        },
+        getAppLayoutWidth(availW, layout) {
+          // Phone: full device width (original behavior).
+          if (layout === "phone") return availW;
+          // iPad + desktop: fixed artboard; iPad then scales up proportionally.
+          return ARTBOARD_W;
+        },
+        getCapScaleAtOne(layout) {
+          return layout !== "tablet";
         },
         onFit() {
           fitFormulaLine();
