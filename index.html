@@ -449,11 +449,13 @@
         padding:
           calc(env(safe-area-inset-top, 0px) + 0.1rem)
           max(0.3rem, env(safe-area-inset-right))
-          calc(env(safe-area-inset-bottom, 0px) + 0.35rem)
+          /* Home indicator only — extra 0.35rem left a fat empty band under formula */
+          env(safe-area-inset-bottom, 0px)
           max(0.3rem, env(safe-area-inset-left));
       }
 
       .app {
+        /* Grow downward into free height when scale > 1 */
         transform-origin: top center;
       }
     }
@@ -794,12 +796,9 @@
           if (layout === "phone") return availW;
           return 416;
         },
-        getCapScaleAtOne(layout, availW) {
-          // Only touch iPads (wide + not desktop pointer) scale above 1.
-          if (layout === "wide" && !isDesktopPointer() && availW > 767) {
-            return false;
-          }
-          return true;
+        getCapScaleAtOne(layout) {
+          // Desktop Mac only: cap at 1. Phone + iPad scale as large as fits.
+          return layout === "wide" && isDesktopPointer();
         },
         onFit() {
           fitFormulaLine();
