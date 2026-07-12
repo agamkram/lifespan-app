@@ -458,6 +458,24 @@
       }
     }
 
+    /* iPad / touch wide: center scale (phone uses top-origin; don't use that here) */
+    @media (min-width: 768px) and (max-width: 1366px) and (hover: none),
+      (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+      .fit-stage {
+        align-items: center;
+        justify-content: center;
+        padding:
+          max(0.35rem, env(safe-area-inset-top, 0px))
+          max(0.45rem, env(safe-area-inset-right, 0px))
+          max(0.35rem, env(safe-area-inset-bottom, 0px))
+          max(0.45rem, env(safe-area-inset-left, 0px));
+      }
+
+      .app {
+        transform-origin: center center;
+      }
+    }
+
     @media (min-width: 768px) and (max-height: 700px) {
       :root {
         --app-gap: 0.3rem;

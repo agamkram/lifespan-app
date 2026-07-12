@@ -164,24 +164,67 @@
       if (!fitNaturalH || !fitNaturalW) return;
 
       const buffer = topBufferFor(layout);
-      let scale = Math.min(
-        (availH - buffer) / fitNaturalH,
-        availW / fitNaturalW
-      );
+      const SAFETY = 8;
+      const cs = root.getComputedStyle(stage);
+      const padT = parseFloat(cs.paddingTop) || 0;
+      const padB = parseFloat(cs.paddingBottom) || 0;
+      const padL = parseFloat(cs.paddingLeft) || 0;
+      const padR = parseFloat(cs.paddingRight) || 0;
+      // Content box only — scaling against full clientHeight clips the header.
+      const contentH = Math.max(1, availH - padT - padB - buffer - SAFETY);
+      const contentW = Math.max(1, availW - padL - padR - SAFETY);
       const capAtOne = getCapScaleAtOne
         ? getCapScaleAtOne(layout, availW, availH)
         : capScaleAtOne;
+      let scale = Math.min(contentH / fitNaturalH, contentW / fitNaturalW);
       if (capAtOne) scale = Math.min(scale, 1);
+      if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+
+      app.style.transform = `scale(${scale})`;
+
+      // Paint-test: shrink if scaled bounds leave the padded stage (incl. top).
+      function stageLimits() {
+        const r = stage.getBoundingClientRect();
+        return {
+          limitTop: r.top + padT,
+          limitBottom: r.bottom - padB - SAFETY,
+          limitLeft: r.left + padL,
+          limitRight: r.right - padR - 1,
+          contentH: Math.max(1, r.height - padT - padB - SAFETY),
+          contentW: Math.max(1, r.width - padL - padR - 1),
+        };
+      }
+      for (let i = 0; i < 6; i += 1) {
+        const lim = stageLimits();
+        const painted = app.getBoundingClientRect();
+        let fix = 1;
+        if (painted.top < lim.limitTop - 0.5) {
+          fix = Math.min(fix, lim.contentH / Math.max(1, painted.height));
+        }
+        if (painted.bottom > lim.limitBottom + 0.5) {
+          fix = Math.min(fix, lim.contentH / Math.max(1, painted.height));
+        }
+        if (
+          painted.right > lim.limitRight + 0.5 ||
+          painted.left < lim.limitLeft - 0.5
+        ) {
+          fix = Math.min(fix, lim.contentW / Math.max(1, painted.width));
+        }
+        if (fix >= 0.999) break;
+        scale = Math.max(0.05, scale * fix);
+        if (capAtOne) scale = Math.min(scale, 1);
+        app.style.transform = `scale(${scale})`;
+      }
 
       if (
         layoutReady &&
         app.classList.contains("is-fitted") &&
         Math.abs(scale - appliedScale) < scaleEpsilon
       ) {
+        appliedScale = scale;
         return;
       }
 
-      app.style.transform = `scale(${scale})`;
       appliedScale = scale;
       if (!app.classList.contains("is-fitted")) {
         layoutShownAt = performance.now();
