@@ -769,6 +769,16 @@
         update();
       });
 
+      // Phone: unchanged (full width, scale ≤1).
+      // iPad: same 416 artboard as Mac card, but scale may exceed 1 (proportional).
+      // Keep layout name "wide" so existing grid CSS still applies (no "tablet" name).
+      function isDesktopPointer() {
+        return (
+          navigator.maxTouchPoints === 0 &&
+          window.matchMedia("(hover: hover) and (pointer: fine)").matches
+        );
+      }
+
       const fit = FitToScreen.create({
         stage: "fit-stage",
         app: "app",
@@ -780,7 +790,15 @@
         useScaleForLayout() {
           return true;
         },
-        getCapScaleAtOne() {
+        getAppLayoutWidth(availW, layout) {
+          if (layout === "phone") return availW;
+          return 416;
+        },
+        getCapScaleAtOne(layout, availW) {
+          // Only touch iPads (wide + not desktop pointer) scale above 1.
+          if (layout === "wide" && !isDesktopPointer() && availW > 767) {
+            return false;
+          }
           return true;
         },
         onFit() {
