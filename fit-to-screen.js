@@ -181,24 +181,66 @@
       if (!fitNaturalH || !fitNaturalW) return;
 
       const buffer = topBufferFor(layout);
-      let scale = Math.min(
-        (availH - buffer) / fitNaturalH,
-        availW / fitNaturalW
-      );
+      const SAFETY = 8;
+      const cs = root.getComputedStyle(stage);
+      const padT = parseFloat(cs.paddingTop) || 0;
+      const padB = parseFloat(cs.paddingBottom) || 0;
+      const padL = parseFloat(cs.paddingLeft) || 0;
+      const padR = parseFloat(cs.paddingRight) || 0;
+      // Use content box (inside padding), NOT full clientHeight — over-scale
+      // against clientHeight clips the header when scale > 1.
+      const contentH = Math.max(1, availH - padT - padB - buffer - SAFETY);
+      const contentW = Math.max(1, availW - padL - padR - SAFETY);
       const capAtOne = getCapScaleAtOne
         ? getCapScaleAtOne(layout, availW, availH)
         : capScaleAtOne;
+      let scale = Math.min(contentH / fitNaturalH, contentW / fitNaturalW);
       if (capAtOne) scale = Math.min(scale, 1);
+      if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+
+      app.style.transform = `scale(${scale})`;
+
+      function stageLimits() {
+        const stageRect = stage.getBoundingClientRect();
+        return {
+          limitTop: stageRect.top + padT,
+          limitBottom: stageRect.bottom - padB - SAFETY,
+          limitLeft: stageRect.left + padL,
+          limitRight: stageRect.right - padR - 1,
+          contentH: Math.max(1, stageRect.height - padT - padB - SAFETY),
+          contentW: Math.max(1, stageRect.width - padL - padR - 1),
+        };
+      }
+
+      // Shrink until painted bounds sit fully inside the padded stage (incl. top).
+      for (let i = 0; i < 6; i += 1) {
+        const lim = stageLimits();
+        const painted = app.getBoundingClientRect();
+        let fix = 1;
+        if (painted.top < lim.limitTop - 0.5) {
+          fix = Math.min(fix, lim.contentH / Math.max(1, painted.height));
+        }
+        if (painted.bottom > lim.limitBottom + 0.5) {
+          fix = Math.min(fix, lim.contentH / Math.max(1, painted.height));
+        }
+        if (painted.right > lim.limitRight + 0.5 || painted.left < lim.limitLeft - 0.5) {
+          fix = Math.min(fix, lim.contentW / Math.max(1, painted.width));
+        }
+        if (fix >= 0.999) break;
+        scale = Math.max(0.05, scale * fix);
+        if (capAtOne) scale = Math.min(scale, 1);
+        app.style.transform = `scale(${scale})`;
+      }
 
       if (
         layoutReady &&
         app.classList.contains("is-fitted") &&
         Math.abs(scale - appliedScale) < scaleEpsilon
       ) {
+        appliedScale = scale;
         return;
       }
 
-      app.style.transform = `scale(${scale})`;
       appliedScale = scale;
       if (!app.classList.contains("is-fitted")) {
         layoutShownAt = performance.now();
