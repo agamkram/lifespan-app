@@ -445,16 +445,35 @@
 
     @media (max-width: 767px) {
       .fit-stage {
-        align-items: flex-start;
+        align-items: center;
+        justify-content: center;
         padding:
-          calc(env(safe-area-inset-top, 0px) + 0.1rem)
-          max(0.3rem, env(safe-area-inset-right))
-          calc(env(safe-area-inset-bottom, 0px) + 0.35rem)
-          max(0.3rem, env(safe-area-inset-left));
+          max(0.125in, env(safe-area-inset-top, 0px))
+          max(0.125in, env(safe-area-inset-right, 0px))
+          max(0.125in, env(safe-area-inset-bottom, 0px))
+          max(0.125in, env(safe-area-inset-left, 0px));
       }
 
       .app {
-        transform-origin: top center;
+        transform-origin: center center;
+      }
+    }
+
+    /* iPad / touch tablets: same artboard, scale-up path (no fluid reflow) */
+    @media (min-width: 768px) and (max-width: 1366px) and (hover: none),
+      (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+      .fit-stage {
+        align-items: center;
+        justify-content: center;
+        padding:
+          max(0.2rem, env(safe-area-inset-top, 0px))
+          max(0.35rem, env(safe-area-inset-right, 0px))
+          max(0.2rem, env(safe-area-inset-bottom, 0px))
+          max(0.35rem, env(safe-area-inset-left, 0px));
+      }
+
+      .app {
+        transform-origin: center center;
       }
     }
 
@@ -751,19 +770,44 @@
         update();
       });
 
+      // One artboard; scale as large as fits on phone/iPad. Desktop stays a modest card.
+      const TOUCH_ARTBOARD_W = 400;
+      const DESKTOP_ARTBOARD_W = 416;
+
+      function isDesktopPointer() {
+        return (
+          navigator.maxTouchPoints === 0 &&
+          window.matchMedia("(hover: hover) and (pointer: fine)").matches
+        );
+      }
+
+      function isTouchLike() {
+        return (
+          navigator.maxTouchPoints > 0 ||
+          window.matchMedia("(pointer: coarse)").matches ||
+          window.matchMedia("(hover: none)").matches
+        );
+      }
+
       const fit = FitToScreen.create({
         stage: "fit-stage",
         app: "app",
-        phoneMaxWidth: 767,
-        wideAppWidth: 416,
-        getLayoutName(availW) {
-          return availW <= 767 ? "phone" : "wide";
-        },
+        phoneMaxWidth: 500,
+        wideAppWidth: DESKTOP_ARTBOARD_W,
         useScaleForLayout() {
           return true;
         },
-        getCapScaleAtOne() {
-          return true;
+        getLayoutName(availW, availH) {
+          if (isDesktopPointer() && !isTouchLike()) return "wide";
+          if (Math.min(availW, availH) <= 500) return "phone";
+          return "tablet";
+        },
+        getAppLayoutWidth(_availW, layout) {
+          return layout === "wide" ? DESKTOP_ARTBOARD_W : TOUCH_ARTBOARD_W;
+        },
+        // Touch (phone + iPad): scale freely above 1. Desktop: cap at 1.
+        getCapScaleAtOne(layout) {
+          return layout === "wide";
         },
         onFit() {
           fitFormulaLine();
