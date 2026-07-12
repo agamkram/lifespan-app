@@ -101,18 +101,18 @@
 
     .fit-stage--fluid {
       overflow: hidden;
-      align-items: center;
-      justify-content: center;
+      align-items: stretch;
+      justify-content: flex-start;
     }
 
     .fit-stage--fluid > .app {
       transform: none !important;
       width: 100% !important;
-      max-width: 56rem;
-      height: auto;
+      max-width: none !important;
+      height: 100% !important;
       max-height: none;
       will-change: auto;
-      overflow: visible;
+      overflow: hidden;
     }
 
     .app[data-layout="wide"],
@@ -443,20 +443,48 @@
       white-space: nowrap;
     }
 
+    /*
+     * Phone only: fluid full height. Scale can't fill the bottom when artboard
+     * width === screen width (cap at 1). Pin formula to the bottom with flex.
+     * iPad keeps proportional scale (unchanged).
+     */
     @media (max-width: 767px) {
-      .fit-stage {
-        align-items: flex-start;
+      .fit-stage,
+      .fit-stage.fit-stage--fluid {
+        align-items: stretch;
+        justify-content: flex-start;
         padding:
-          calc(env(safe-area-inset-top, 0px) + 0.1rem)
-          max(0.3rem, env(safe-area-inset-right))
-          /* Home indicator only — extra 0.35rem left a fat empty band under formula */
-          env(safe-area-inset-bottom, 0px)
-          max(0.3rem, env(safe-area-inset-left));
+          max(0.125in, env(safe-area-inset-top, 0px))
+          max(0.125in, env(safe-area-inset-right, 0px))
+          max(0.125in, env(safe-area-inset-bottom, 0px))
+          max(0.125in, env(safe-area-inset-left, 0px));
       }
 
-      .app {
-        /* Grow downward into free height when scale > 1 */
-        transform-origin: top center;
+      .fit-stage--fluid > .app,
+      .app[data-layout="phone"] {
+        display: flex !important;
+        flex-direction: column;
+        grid-template-rows: none;
+        grid-template-areas: none;
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        transform: none !important;
+        padding: 0.2rem 0.35rem 0.1rem;
+        box-sizing: border-box;
+      }
+
+      .app[data-layout="phone"] > header,
+      .app[data-layout="phone"] > .inputs-panel,
+      .app[data-layout="phone"] > .result-panel {
+        flex: 0 0 auto;
+      }
+
+      .app[data-layout="phone"] > .formula-wrap {
+        flex: 0 0 auto;
+        margin-top: auto;
+        margin-bottom: 0;
+        padding-bottom: 0.15rem;
       }
     }
 
@@ -789,16 +817,18 @@
         getLayoutName(availW) {
           return availW <= 767 ? "phone" : "wide";
         },
-        useScaleForLayout() {
-          return true;
+        // Phone: fluid (formula pinned to bottom). iPad/Mac: scale.
+        useScaleForLayout(layout) {
+          return layout !== "phone";
         },
         getAppLayoutWidth(availW, layout) {
           if (layout === "phone") return availW;
           return 416;
         },
         getCapScaleAtOne(layout) {
-          // Desktop Mac only: cap at 1. Phone + iPad scale as large as fits.
-          return layout === "wide" && isDesktopPointer();
+          // iPad (touch wide): scale above 1. Desktop Mac: cap at 1.
+          if (layout === "wide" && !isDesktopPointer()) return false;
+          return true;
         },
         onFit() {
           fitFormulaLine();
