@@ -73,37 +73,20 @@
       return isPhoneLayout(availW) ? availW : wideAppWidth;
     }
 
-    function isTouchLike() {
-      return (
-        (root.navigator && root.navigator.maxTouchPoints > 0) ||
-        root.matchMedia?.("(pointer: coarse)")?.matches ||
-        root.matchMedia?.("(hover: none)")?.matches
-      );
-    }
-
     function syncFitStageViewport() {
       if (!ensureElements()) return;
       const vv = root.visualViewport;
-      // Phone + iPad (not large desktop monitors)
-      const useVv =
-        vv &&
-        (isPhoneLayout(root.innerWidth) ||
-          (root.innerWidth <= 1366 && isTouchLike()));
-      if (!useVv) {
+      if (!vv || !isPhoneLayout(root.innerWidth)) {
         stage.style.top = "";
         stage.style.left = "";
         stage.style.width = "";
         stage.style.height = "";
         return;
       }
-      const top = vv.offsetTop;
-      const left = vv.offsetLeft;
-      const width = vv.width;
-      const height = Math.max(vv.height, root.innerHeight - top);
-      stage.style.top = `${top}px`;
-      stage.style.left = `${left}px`;
-      stage.style.width = `${width}px`;
-      stage.style.height = `${height}px`;
+      stage.style.top = `${vv.offsetTop}px`;
+      stage.style.left = `${vv.offsetLeft}px`;
+      stage.style.width = `${vv.width}px`;
+      stage.style.height = `${vv.height}px`;
     }
 
     function viewportSizeMatchesFit() {
