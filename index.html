@@ -529,13 +529,22 @@
     /* iPad / touch wide: center scale (phone uses top-origin; don't use that here) */
     @media (min-width: 768px) and (max-width: 1366px) and (hover: none),
       (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+      html,
+      body {
+        height: 100%;
+        height: 100dvh;
+        overflow: hidden;
+      }
+
       .fit-stage {
         align-items: center;
         justify-content: center;
+        /* Extra bottom pad in Safari (toolbar is not env(safe-area)); JS also
+           sizes stage to visualViewport so the card scales inside visible area. */
         padding:
           max(0.35rem, env(safe-area-inset-top, 0px))
           max(0.45rem, env(safe-area-inset-right, 0px))
-          max(0.35rem, env(safe-area-inset-bottom, 0px))
+          max(0.55rem, env(safe-area-inset-bottom, 0px), 0.5rem)
           max(0.45rem, env(safe-area-inset-left, 0px));
       }
 
@@ -696,7 +705,7 @@
     </div>
   </div>
 
-  <script src="fit-to-screen.js"></script>
+  <script src="fit-to-screen.js?v=ipad-vv1"></script>
   <script src="estimator.js"></script>
   <script>
     (function () {
