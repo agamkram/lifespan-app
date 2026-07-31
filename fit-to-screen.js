@@ -75,17 +75,22 @@
 
     function syncFitStageViewport() {
       if (!ensureElements()) return;
+      // Phone fluid layout is owned by the app (pinPhoneFill) — Safari vs PWA.
+      // Writing a short visualViewport box here races that pin and can lift UI.
+      if (
+        isPhoneLayout(root.innerWidth) &&
+        stage.classList.contains("fit-stage--fluid")
+      ) {
+        return;
+      }
       const vv = root.visualViewport;
-      // Phone *and* iPad Safari/PWA: size the stage to the *visible* viewport.
-      // Skipping tablets left the stage at layout height (under Safari chrome),
-      // so the bottom of the scaled card was clipped in Safari while PWA was fine.
+      // iPad / tablet touch: size to visible viewport for scaled layouts.
       const useVv =
         vv &&
-        (isPhoneLayout(root.innerWidth) ||
-          (root.innerWidth <= 1366 &&
-            (root.navigator?.maxTouchPoints > 0 ||
-              root.matchMedia?.("(pointer: coarse)")?.matches ||
-              root.matchMedia?.("(hover: none)")?.matches)));
+        root.innerWidth <= 1366 &&
+        (root.navigator?.maxTouchPoints > 0 ||
+          root.matchMedia?.("(pointer: coarse)")?.matches ||
+          root.matchMedia?.("(hover: none)")?.matches);
       if (!useVv) {
         stage.style.top = "";
         stage.style.left = "";
@@ -95,7 +100,6 @@
         stage.style.height = "";
         return;
       }
-      // Clear inset edges so top+height wins over CSS inset:0 (bottom:0 conflict).
       stage.style.top = `${vv.offsetTop}px`;
       stage.style.left = `${vv.offsetLeft}px`;
       stage.style.right = "auto";
