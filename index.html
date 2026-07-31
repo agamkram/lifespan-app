@@ -166,6 +166,7 @@
       gap: var(--app-gap);
       width: 100%;
       flex-shrink: 0;
+      min-height: 0;
     }
 
     .result-panel {
@@ -455,10 +456,12 @@
     }
 
     /*
-     * Phone only: full-height grid; last row is 1fr and formula sits at its bottom.
-     * Stage geometry is owned by pinPhoneFill() (Safari = visualViewport;
-     * PWA = edge stretch). Do not use inset/height !important — that buried
-     * the formula under the Safari toolbar while standalone stayed fine.
+     * Phone: keep result + formula always on-screen (auto rows). Inputs take
+     * leftover height and scroll when Safari's toolbar makes the viewport short.
+     * (Old layout put formula in 1fr — when inputs were taller than the screen,
+     * that row collapsed and overflow:hidden clipped the bottom. PWA had more
+     * height so it looked fine.)
+     * Stage geometry: pinPhoneFill() — Safari = visualViewport, PWA = edges.
      */
     @media (max-width: 767px) {
       html,
@@ -481,18 +484,20 @@
         flex-direction: column;
         align-items: stretch;
         justify-content: stretch;
-        padding-top: max(0.125in, env(safe-area-inset-top, 0px));
-        padding-right: max(0.1in, env(safe-area-inset-right, 0px));
-        padding-bottom: max(0.125in, env(safe-area-inset-bottom, 0px));
-        padding-left: max(0.1in, env(safe-area-inset-left, 0px));
+        padding-top: max(0.1in, env(safe-area-inset-top, 0px));
+        padding-right: max(0.08in, env(safe-area-inset-right, 0px));
+        padding-bottom: max(0.1in, env(safe-area-inset-bottom, 0px));
+        padding-left: max(0.08in, env(safe-area-inset-left, 0px));
         box-sizing: border-box;
+        overflow: hidden;
       }
 
       .fit-stage--fluid > .app,
       .app[data-layout="phone"] {
         display: grid;
         grid-template-columns: 1fr;
-        grid-template-rows: auto auto auto minmax(0, 1fr);
+        /* header | scrollable inputs | result | formula — last two never collapse */
+        grid-template-rows: auto minmax(0, 1fr) auto auto;
         grid-template-areas:
           "header"
           "inputs"
@@ -504,31 +509,44 @@
         max-height: none;
         margin: 0;
         transform: none;
-        padding: 0.15rem 0.3rem 0;
+        padding: 0.12rem 0.28rem 0.08rem;
         box-sizing: border-box;
-        gap: var(--app-gap);
+        gap: 0.28rem;
+        overflow: hidden;
+        min-height: 0;
       }
 
       .app[data-layout="phone"] > header {
         grid-area: header;
+        flex-shrink: 0;
       }
 
       .app[data-layout="phone"] > .inputs-panel {
         grid-area: inputs;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+        flex-shrink: 1;
+        padding-bottom: 0.15rem;
       }
 
       .app[data-layout="phone"] > .result-panel {
         grid-area: result;
+        flex-shrink: 0;
+        margin-top: 0;
       }
 
       .app[data-layout="phone"] > .formula-wrap {
         grid-area: formula;
-        align-self: end;
+        flex-shrink: 0;
+        align-self: stretch;
         justify-self: center;
         width: 100%;
         margin-top: 0;
         margin-bottom: 0;
-        padding: 0.2rem 0 0.15rem;
+        padding: 0.12rem 0 0.2rem;
       }
     }
 
@@ -711,7 +729,7 @@
     </div>
   </div>
 
-  <script src="fit-to-screen.js?v=phone-safari1"></script>
+  <script src="fit-to-screen.js?v=phone-clip2"></script>
   <script src="estimator.js"></script>
   <script>
     (function () {
@@ -896,17 +914,19 @@
 
         stage.classList.add("fit-stage--fluid");
         stage.style.position = "fixed";
-        stage.style.width = "";
-        stage.style.height = "";
 
         if (!standalone && vv && vv.height > 40 && vv.width > 40) {
-          stage.style.top = `${Math.round(vv.offsetTop) || 0}px`;
-          stage.style.left = `${Math.round(vv.offsetLeft) || 0}px`;
+          // Safari tab: visible box only (above URL / toolbar chrome)
+          const top = Math.max(0, Math.round(vv.offsetTop) || 0);
+          const left = Math.max(0, Math.round(vv.offsetLeft) || 0);
+          stage.style.top = `${top}px`;
+          stage.style.left = `${left}px`;
           stage.style.width = `${Math.round(vv.width)}px`;
           stage.style.height = `${Math.round(vv.height)}px`;
           stage.style.right = "auto";
           stage.style.bottom = "auto";
         } else {
+          // PWA / full phone: stretch to every edge
           stage.style.top = "0";
           stage.style.left = "0";
           stage.style.right = "0";
@@ -916,11 +936,13 @@
         }
 
         appEl.dataset.layout = "phone";
+        appEl.classList.add("is-fitted");
         appEl.style.transform = "none";
         appEl.style.width = "100%";
         appEl.style.maxWidth = "none";
         appEl.style.height = "100%";
         appEl.style.maxHeight = "none";
+        appEl.style.minHeight = "0";
       }
 
       const fit = FitToScreen.create({
